@@ -1,1 +1,1 @@
-target_sources(${PROJECT_NAME} PRIVATE main.c buffer.c)
+target_sources(${PROJECT_NAME} PRIVATE main.c buffer.c compiler.c)

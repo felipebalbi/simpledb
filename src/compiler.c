@@ -22,44 +22,40 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <simpledb/buffer.h>
 #include <simpledb/compiler.h>
 
-static void print_prompt(void)
+enum meta_command_result do_meta_command(struct input_buffer *input)
 {
-	printf("simpledb > ");
+	if (strncmp(input->buffer, ".exit", input->input_length) == 0)
+		exit(EXIT_SUCCESS);
+
+        return META_COMMAND_UNRECOGNIZED_COMMAND;
 }
 
-int main(int argc, char* argv[])
+enum prepare_result prepare_statement(struct input_buffer *input,
+		struct statement *statement)
 {
-	struct input_buffer *input = new_input_buffer();
+	if (strncmp(input->buffer, "insert", 6) == 0) {
+		statement->type = STATEMENT_INSERT;
+		return PREPARE_SUCCESS;
+	}
 
-        while (true) {
-		struct statement statement;
+	if (strncmp(input->buffer, "select", input->input_length) == 0) {
+		statement->type = STATEMENT_SELECT;
+		return PREPARE_SUCCESS;
+	}
 
-                print_prompt();
-		read_input(input);
+	return PREPARE_UNRECOGNIZED_STATEMENT;
+}
 
-		if (input->buffer[0] == '.') {
-			switch (do_meta_command(input)) {
-			case META_COMMAND_SUCCESS:
-				continue;
-			case META_COMMAND_UNRECOGNIZED_COMMAND:
-				printf("Unrecognized command '%s'\n", input->buffer);
-				continue;
-			}
-		}
-
-		switch (prepare_statement(input, &statement)) {
-		case PREPARE_SUCCESS:
-			break;
-		case PREPARE_UNRECOGNIZED_STATEMENT:
-			printf("Unrecognized keyword at start of '%s'.\n",
-					input->buffer);
-			continue;
-		}
-
-		execute_statement(&statement);
-		printf("Executed.\n");
+void execute_statement(struct statement *statement)
+{
+	switch (statement->type) {
+	case STATEMENT_INSERT:
+		printf("TODO: implement insert.\n");
+		break;
+	case STATEMENT_SELECT:
+		printf("TODO: implement select.\n");
+		break;
 	}
 }
