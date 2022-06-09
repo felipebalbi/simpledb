@@ -20,7 +20,9 @@
 #ifndef __COMPILER_H__
 #define __COMPILER_H__
 
+#include <stdint.h>
 #include "buffer.h"
+#include "table.h"
 
 enum meta_command_result {
 	META_COMMAND_SUCCESS,
@@ -29,7 +31,14 @@ enum meta_command_result {
 
 enum prepare_result {
 	PREPARE_SUCCESS,
+	PREPARE_SYNTAX_ERROR,
 	PREPARE_UNRECOGNIZED_STATEMENT,
+};
+
+enum execute_result {
+	EXECUTE_SUCCESS,
+	EXECUTE_TABLE_FULL,
+	EXECUTE_UNKNOWN,
 };
 
 enum statement_type {
@@ -39,11 +48,13 @@ enum statement_type {
 
 struct statement {
 	enum statement_type type;
+	struct row row;
 };
 
 enum meta_command_result do_meta_command(struct input_buffer *input);
 enum prepare_result prepare_statement(struct input_buffer *input,
 		struct statement *statement);
-void execute_statement(struct statement *statement);
+enum execute_result execute_statement(struct statement *statement,
+	struct table *table);
 
 #endif /* __COMPILER_H__ */

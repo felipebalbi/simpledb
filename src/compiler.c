@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "compiler.h"
+#include "table.h"
 
 enum meta_command_result do_meta_command(struct input_buffer *input)
 {
@@ -36,8 +37,17 @@ enum prepare_result prepare_statement(struct input_buffer *input,
 		struct statement *statement)
 {
 	if (strncmp(input->buffer, "insert", 6) == 0) {
-		statement->type = STATEMENT_INSERT;
-		return PREPARE_SUCCESS;
+		int ret;
+
+                statement->type = STATEMENT_INSERT;
+
+                ret = sscanf(input->buffer, "insert %u %s %s",
+				&statement->row.id, statement->row.username,
+				statement->row.email);
+		if (ret < 3)
+			return PREPARE_SYNTAX_ERROR;
+
+                return PREPARE_SUCCESS;
 	}
 
 	if (strncmp(input->buffer, "select", input->input_length) == 0) {
@@ -48,14 +58,43 @@ enum prepare_result prepare_statement(struct input_buffer *input,
 	return PREPARE_UNRECOGNIZED_STATEMENT;
 }
 
-void execute_statement(struct statement *statement)
+enum execute_result execute_insert(struct statement *statement,
+		struct table *table)
+{
+	struct row *row;
+	
+	if (table->num_rows >= TABLE_MAX_ROWS)
+		return EXECUTE_TABLE_FULL;
+
+	row = &statement->row;
+        serialize_row(row, row_slot(table, table->num_rows));
+	table->num_rows++;
+
+	return EXECUTE_SUCCESS;
+}
+
+enum execute_result execute_select(struct statement *statement,
+		struct table *table)
+{
+	struct row row;
+
+	for (uint32_t i = 0; i < table->num_rows; i++) {
+		deserialize_row(row_slot(table, i), &row);
+		print_row(&row);
+	}
+
+	return EXECUTE_SUCCESS;
+}
+
+enum execute_result execute_statement(struct statement *statement,
+		struct table *table)
 {
 	switch (statement->type) {
 	case STATEMENT_INSERT:
-		printf("TODO: implement insert.\n");
-		break;
+		return execute_insert(statement, table);
 	case STATEMENT_SELECT:
-		printf("TODO: implement select.\n");
-		break;
+		return execute_select(statement, table);
+	default:
+		return EXECUTE_UNKNOWN;
 	}
 }

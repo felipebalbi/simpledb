@@ -33,6 +33,7 @@ static void print_prompt(void)
 int main(int argc, char* argv[])
 {
 	struct input_buffer *input = new_input_buffer();
+	struct table *table = new_table();
 
         while (true) {
 		struct statement statement;
@@ -45,7 +46,8 @@ int main(int argc, char* argv[])
 			case META_COMMAND_SUCCESS:
 				continue;
 			case META_COMMAND_UNRECOGNIZED_COMMAND:
-				printf("Unrecognized command '%s'\n", input->buffer);
+				printf("Unrecognized command '%s'\n",
+						input->buffer);
 				continue;
 			}
 		}
@@ -53,13 +55,25 @@ int main(int argc, char* argv[])
 		switch (prepare_statement(input, &statement)) {
 		case PREPARE_SUCCESS:
 			break;
+		case PREPARE_SYNTAX_ERROR:
+			printf("Syntax error. Could not parse statement.\n");
+			continue;
 		case PREPARE_UNRECOGNIZED_STATEMENT:
 			printf("Unrecognized keyword at start of '%s'.\n",
 					input->buffer);
 			continue;
 		}
 
-		execute_statement(&statement);
-		printf("Executed.\n");
+		switch (execute_statement(&statement, table)) {
+		case EXECUTE_SUCCESS:
+			printf("Executed.\n");
+			break;
+		case EXECUTE_TABLE_FULL:
+			printf("Error: Table full.\n");
+			break;
+		default:
+			printf("Erro: Unknown error.\n");
+			break;
+		}
 	}
 }
