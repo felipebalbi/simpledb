@@ -16,4 +16,7 @@
 
 # Tags table
 TAGS
+
+# Build directories
 /build/
+/.cache/
