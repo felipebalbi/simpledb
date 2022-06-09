@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <simpledb/buffer.h>
+#include "buffer.h"
 
 struct input_buffer *new_input_buffer()
 {

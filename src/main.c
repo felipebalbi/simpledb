@@ -22,8 +22,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <simpledb/buffer.h>
-#include <simpledb/compiler.h>
+#include "buffer.h"
+#include "compiler.h"
 
 static void print_prompt(void)
 {

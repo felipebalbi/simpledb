@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <simpledb/compiler.h>
+#include "compiler.h"
 
 enum meta_command_result do_meta_command(struct input_buffer *input)
 {

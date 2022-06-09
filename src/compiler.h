@@ -20,7 +20,7 @@
 #ifndef __COMPILER_H__
 #define __COMPILER_H__
 
-#include <simpledb/buffer.h>
+#include "buffer.h"
 
 enum meta_command_result {
 	META_COMMAND_SUCCESS,
