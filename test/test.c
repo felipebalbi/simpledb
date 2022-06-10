@@ -18,8 +18,87 @@
  */
 
 #include <criterion/criterion.h>
+#include <criterion/new/assert.h>
 
-Test(simple, test)
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#define OUTPUT_MAX 4096
+
+static void run_script(char **cmds, char *output, size_t len)
 {
-	cr_assert(1, "Passing test");
+	int rpipes[2];
+	int wpipes[2];
+        pid_t child;
+	int ret;
+	
+	ret = pipe(rpipes);
+	if (ret != 0) {
+		fprintf(stderr, "Failed to create read pipes\n");
+		exit(EXIT_FAILURE);
+	}
+
+        ret = pipe(wpipes);
+	if (ret != 0) {
+		fprintf(stderr, "Failed to create write pipes\n");
+		close(rpipes[0]);
+		close(rpipes[1]);
+	}
+
+	child = fork();
+	if (child == -1) {
+		fprintf(stderr, "Failed to fork.\n");
+		exit(EXIT_FAILURE);
+	}
+
+        if (child == 0) { /* child */
+		char *exe[] = { "./simpledb", NULL };
+
+		close(wpipes[1]);
+		close(rpipes[0]);
+
+                dup2(wpipes[0], STDIN_FILENO);
+		dup2(rpipes[1], STDOUT_FILENO);
+
+                ret = execv(exe[0], exe);
+		if (ret == -1) {
+			fprintf(stderr, "Failed to execute. %s\n",
+					strerror(errno));
+		}
+	} else { /* parent */
+		close(wpipes[0]);
+		close(rpipes[1]);
+
+		while (*cmds) {
+			write(wpipes[1], *cmds, strlen(*cmds));
+			cmds++;
+		}
+
+                wait(NULL);
+		read(rpipes[0], output, len);
+	}
+}
+
+Test(database, inserts_and_retrieves_row)
+{
+	char output[OUTPUT_MAX];
+
+	char *cmds[] = {
+		"insert 1 user1 person1@example.com\n",
+		"select\n",
+		".exit\n",
+		NULL
+	};
+
+	run_script(cmds, output, OUTPUT_MAX);
+	cr_assert(eq(str, output, "simpledb > Executed.\n\
+simpledb > (1, user1, person1@example.com)\n\
+Executed.\nsimpledb > "));
 }
