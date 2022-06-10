@@ -86,6 +86,54 @@ static void run_script(char **cmds, char *output, size_t len)
 	}
 }
 
+Test(database, simply_exits)
+{
+	char output[OUTPUT_MAX];
+
+	char *cmds[] = {
+		".exit\n",
+		NULL
+	};
+
+	memset(output, 0x00, OUTPUT_MAX);
+	run_script(cmds, output, OUTPUT_MAX);
+	cr_assert(eq(str, output, "simpledb > "));
+}
+
+Test(database, select_and_exit)
+{
+	char output[OUTPUT_MAX];
+
+	char *cmds[] = {
+		"select\n"
+		".exit\n",
+		NULL
+	};
+
+	memset(output, 0x00, OUTPUT_MAX);
+	run_script(cmds, output, OUTPUT_MAX);
+	cr_assert(eq(str, output, "simpledb > "
+					"Executed.\n"
+					"simpledb > "));
+}
+
+Test(database, handles_unknown_command)
+{
+	char output[OUTPUT_MAX];
+
+	char *cmds[] = {
+		".foo\n"
+		".exit\n",
+		NULL
+	};
+
+	memset(output, 0x00, OUTPUT_MAX);
+	run_script(cmds, output, OUTPUT_MAX);
+	cr_assert(eq(str, output, "simpledb > "
+					"Unrecognized command '.foo'\n"
+					"simpledb > "));
+}
+
 Test(database, inserts_and_retrieves_row)
 {
 	char output[OUTPUT_MAX];
@@ -97,8 +145,12 @@ Test(database, inserts_and_retrieves_row)
 		NULL
 	};
 
+	memset(output, 0x00, OUTPUT_MAX);
 	run_script(cmds, output, OUTPUT_MAX);
-	cr_assert(eq(str, output, "simpledb > Executed.\n\
-simpledb > (1, user1, person1@example.com)\n\
-Executed.\nsimpledb > "));
+	cr_assert(eq(str, output, "simpledb > "
+					"Executed.\n"
+					"simpledb > "
+					"(1, user1, person1@example.com)\n"
+					"Executed.\n"
+					"simpledb > "));
 }
