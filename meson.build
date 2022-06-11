@@ -1,5 +1,7 @@
 project('simpledb', 'c', version: '0.1.0')
 
+add_project_arguments('-D_GNU_SOURCE', language: 'c')
+
 subdir('src')
 executable('simpledb', src_files)
 
