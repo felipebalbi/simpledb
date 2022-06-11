@@ -32,14 +32,12 @@
 
 #define OUTPUT_MAX 4096
 
-static void run_script(char **cmds, char *output, size_t len)
+static pid_t start_child(int rpipes[2], int wpipes[2])
 {
-	int rpipes[2];
-	int wpipes[2];
-        pid_t child;
+	pid_t child;
 	int ret;
-	
-	ret = pipe(rpipes);
+
+        ret = pipe(rpipes);
 	if (ret != 0) {
 		fprintf(stderr, "Failed to create read pipes\n");
 		exit(EXIT_FAILURE);
@@ -50,6 +48,7 @@ static void run_script(char **cmds, char *output, size_t len)
 		fprintf(stderr, "Failed to create write pipes\n");
 		close(rpipes[0]);
 		close(rpipes[1]);
+		exit(EXIT_FAILURE);
 	}
 
 	child = fork();
@@ -72,17 +71,45 @@ static void run_script(char **cmds, char *output, size_t len)
 			fprintf(stderr, "Failed to execute. %s\n",
 					strerror(errno));
 		}
-	} else { /* parent */
+	}
+
+	return child;
+}
+
+static void send_cmd(int pipe, char *cmd)
+{
+	write(pipe, cmd, strlen(cmd));
+}
+
+static void recv_response(int pipe, char *output, size_t len)
+{
+	read(pipe, output, len);
+}
+
+static void stop_child(int pipe)
+{
+	send_cmd(pipe, ".exit");
+}
+
+static void run_script(char **cmds, char *output, size_t len)
+{
+	int rpipes[2];
+	int wpipes[2];
+        pid_t child;
+
+	child = start_child(rpipes, wpipes);
+
+	if (child > 0) { /* parent */
 		close(wpipes[0]);
 		close(rpipes[1]);
 
 		while (*cmds) {
-			write(wpipes[1], *cmds, strlen(*cmds));
+			send_cmd(wpipes[1], *cmds);
 			cmds++;
 		}
 
-                wait(NULL);
-		read(rpipes[0], output, len);
+		stop_child(wpipes[1]);
+		recv_response(rpipes[0], output, len);
 	}
 }
 
@@ -154,3 +181,29 @@ Test(database, inserts_and_retrieves_row)
 					"Executed.\n"
 					"simpledb > "));
 }
+
+#if 0
+Test(database, prints_error_when_table_full)
+{
+	int rpipes[2];
+	int wpipes[2];
+	char output[OUTPUT_MAX];
+	char cmd[64];
+	pid_t child;
+
+	child = start_child(rpipes, wpipes);
+	close(wpipes[0]);
+	close(rpipes[1]);
+        
+        for (int i = 0; i < 1402; i++) {
+		sprintf(cmd, "insert %d user%d person%d@example.com\n",
+				i, i, i);
+		send_cmd(wpipes[1], cmd);
+		recv_response(rpipes[0], output, OUTPUT_MAX);
+	}
+		
+	stop_child(wpipes[1]);
+	recv_response(rpipes[0], output, OUTPUT_MAX);
+	cr_assert(eq(str, output, "simpledb > Error: Table full."));
+}
+#endif
