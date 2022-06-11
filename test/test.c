@@ -182,6 +182,45 @@ Test(database, inserts_and_retrieves_row)
 					"simpledb > "));
 }
 
+Test(database, ignores_long_usernames)
+{
+	char output[OUTPUT_MAX];
+
+	char *cmds[] = {
+		"insert 1 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		" person1@example.com\n",
+		".exit\n",
+		NULL
+	};
+
+	memset(output, 0x00, OUTPUT_MAX);
+	run_script(cmds, output, OUTPUT_MAX);
+	cr_assert(eq(str, output, "simpledb > "
+					"String is too long.\n"
+					"simpledb > "));
+}
+
+Test(database, ignores_long_emails)
+{
+	char output[OUTPUT_MAX];
+
+	char *cmds[] = {
+		"insert 1 user1 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com\n",
+		".exit\n",
+		NULL
+	};
+
+	memset(output, 0x00, OUTPUT_MAX);
+	run_script(cmds, output, OUTPUT_MAX);
+	cr_assert(eq(str, output, "simpledb > "
+					"String is too long.\n"
+					"simpledb > "));
+}
+
 #if 0
 Test(database, prints_error_when_table_full)
 {

@@ -33,21 +33,44 @@ enum meta_command_result do_meta_command(struct input_buffer *input)
         return META_COMMAND_UNRECOGNIZED_COMMAND;
 }
 
+enum prepare_result prepare_insert(struct input_buffer *input,
+		struct statement *statement)
+{
+	int id;
+
+	char *id_string;
+	char *username;
+	char *email;
+
+	strtok(input->buffer, " ");
+	id_string = strtok(NULL, " ");
+	username = strtok(NULL, " ");
+	email = strtok(NULL, " ");
+
+	if (!id_string || !username || !email)
+		return PREPARE_SYNTAX_ERROR;
+
+	id = atoi(id_string);
+
+        if (strlen(username) > COLUMN_USERNAME_SIZE)
+		return PREPARE_STRING_TOO_LONG;
+
+	if (strlen(email) > COLUMN_EMAIL_SIZE)
+		return PREPARE_STRING_TOO_LONG;
+
+	statement->type = STATEMENT_INSERT;
+	statement->row.id = id;
+	strcpy(statement->row.username, username);
+	strcpy(statement->row.email, email);
+        
+	return PREPARE_SUCCESS;
+}
+
 enum prepare_result prepare_statement(struct input_buffer *input,
 		struct statement *statement)
 {
 	if (strncmp(input->buffer, "insert", 6) == 0) {
-		int ret;
-
-                statement->type = STATEMENT_INSERT;
-
-                ret = sscanf(input->buffer, "insert %u %s %s",
-				&statement->row.id, statement->row.username,
-				statement->row.email);
-		if (ret < 3)
-			return PREPARE_SYNTAX_ERROR;
-
-                return PREPARE_SUCCESS;
+		return prepare_insert(input, statement);
 	}
 
 	if (strncmp(input->buffer, "select", input->input_length) == 0) {

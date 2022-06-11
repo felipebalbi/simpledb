@@ -31,6 +31,7 @@ enum meta_command_result {
 
 enum prepare_result {
 	PREPARE_SUCCESS,
+	PREPARE_STRING_TOO_LONG,
 	PREPARE_SYNTAX_ERROR,
 	PREPARE_UNRECOGNIZED_STATEMENT,
 };
