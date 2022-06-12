@@ -52,7 +52,8 @@ struct statement {
 	struct row row;
 };
 
-enum meta_command_result do_meta_command(struct input_buffer *input);
+enum meta_command_result do_meta_command(struct input_buffer *input,
+		struct table *table);
 enum prepare_result prepare_statement(struct input_buffer *input,
 		struct statement *statement);
 enum execute_result execute_statement(struct statement *statement,

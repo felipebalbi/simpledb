@@ -25,10 +25,13 @@
 #include "compiler.h"
 #include "table.h"
 
-enum meta_command_result do_meta_command(struct input_buffer *input)
+enum meta_command_result do_meta_command(struct input_buffer *input,
+		struct table *table)
 {
-	if (strncmp(input->buffer, ".exit", input->input_length) == 0)
+	if (strncmp(input->buffer, ".exit", input->input_length) == 0) {
+		db_close(table);
 		exit(EXIT_SUCCESS);
+	}
 
         return META_COMMAND_UNRECOGNIZED_COMMAND;
 }

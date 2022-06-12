@@ -33,7 +33,16 @@ static void print_prompt(void)
 int main(int argc, char* argv[])
 {
 	struct input_buffer *input = new_input_buffer();
-	struct table *table = new_table();
+	struct table *table;
+	char *filename;
+
+	if (argc < 2) {
+		fprintf(stderr, "Must supply database filename.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	filename = argv[1];
+        table = db_open(filename);
 
         while (true) {
 		struct statement statement;
@@ -42,7 +51,7 @@ int main(int argc, char* argv[])
 		read_input(input);
 
 		if (input->buffer[0] == '.') {
-			switch (do_meta_command(input)) {
+			switch (do_meta_command(input, table)) {
 			case META_COMMAND_SUCCESS:
 				continue;
 			case META_COMMAND_UNRECOGNIZED_COMMAND:

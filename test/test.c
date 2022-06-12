@@ -31,6 +31,13 @@
 #include <sys/wait.h>
 
 #define OUTPUT_MAX 4096
+#define SIMPLEDB "./simpledb"
+#define DB_FILENAME "tmp.db"
+
+void teardown(void)
+{
+	remove(DB_FILENAME);
+}
 
 static pid_t start_child(int rpipes[2], int wpipes[2])
 {
@@ -58,7 +65,7 @@ static pid_t start_child(int rpipes[2], int wpipes[2])
 	}
 
         if (child == 0) { /* child */
-		char *exe[] = { "./simpledb", NULL };
+		char *exe[] = { SIMPLEDB, DB_FILENAME, NULL };
 
 		close(wpipes[1]);
 		close(rpipes[0]);
@@ -113,7 +120,7 @@ static void run_script(char **cmds, char *output, size_t len)
 	}
 }
 
-Test(database, simply_exits)
+Test(database, simply_exits, .fini = teardown)
 {
 	char output[OUTPUT_MAX];
 
@@ -127,7 +134,7 @@ Test(database, simply_exits)
 	cr_assert(eq(str, output, "simpledb > "));
 }
 
-Test(database, select_and_exit)
+Test(database, select_and_exit, .fini = teardown)
 {
 	char output[OUTPUT_MAX];
 
@@ -144,7 +151,7 @@ Test(database, select_and_exit)
 					"simpledb > "));
 }
 
-Test(database, handles_unknown_command)
+Test(database, handles_unknown_command, .fini = teardown)
 {
 	char output[OUTPUT_MAX];
 
@@ -161,7 +168,7 @@ Test(database, handles_unknown_command)
 					"simpledb > "));
 }
 
-Test(database, inserts_and_retrieves_row)
+Test(database, inserts_and_retrieves_row, .fini = teardown)
 {
 	char output[OUTPUT_MAX];
 
@@ -182,7 +189,7 @@ Test(database, inserts_and_retrieves_row)
 					"simpledb > "));
 }
 
-Test(database, ignores_long_usernames)
+Test(database, ignores_long_usernames, .fini = teardown)
 {
 	char output[OUTPUT_MAX];
 
@@ -200,7 +207,7 @@ Test(database, ignores_long_usernames)
 					"simpledb > "));
 }
 
-Test(database, ignores_long_emails)
+Test(database, ignores_long_emails, .fini = teardown)
 {
 	char output[OUTPUT_MAX];
 
@@ -221,8 +228,40 @@ Test(database, ignores_long_emails)
 					"simpledb > "));
 }
 
+Test(database, persists_data_to_disk, .fini = teardown)
+{
+	char output[OUTPUT_MAX];
+
+	char *cmds1[] = {
+		"insert 1 user1 person1@example.com\n",
+		".exit\n",
+		NULL
+	};
+
+	char *cmds2[] = {
+		"select\n",
+		".exit\n",
+		NULL
+	};
+
+	memset(output, 0x00, OUTPUT_MAX);
+	run_script(cmds1, output, OUTPUT_MAX);
+
+        cr_assert(eq(str, output, "simpledb > "
+					"Executed.\n"
+					"simpledb > "));
+
+        memset(output, 0x00, OUTPUT_MAX);
+	run_script(cmds2, output, OUTPUT_MAX);
+
+        cr_assert(eq(str, output, "simpledb > "
+					"(1, user1, person1@example.com)\n"
+					"Executed.\n"
+					"simpledb > "));
+}
+
 #if 0
-Test(database, prints_error_when_table_full)
+Test(database, prints_error_when_table_full, .fini = teardown)
 {
 	int rpipes[2];
 	int wpipes[2];

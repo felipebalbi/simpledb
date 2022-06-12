@@ -49,16 +49,23 @@ struct row {
 #define ROWS_PER_PAGE		(PAGE_SIZE / ROW_SIZE)
 #define TABLE_MAX_ROWS		(ROWS_PER_PAGE * TABLE_MAX_PAGES)
 
-struct table {
-	uint32_t num_rows;
+struct pager {
+	int fd;
+	uint32_t len;
 	void *pages[TABLE_MAX_PAGES];
 };
 
+struct table {
+	struct pager *pager;
+	uint32_t num_rows;
+};
+
+struct pager *pager_open(const char *filename);
 void serialize_row(struct row *src, void *dst);
 void deserialize_row(void *src, struct row *dst);
 void *row_slot(struct table *table, uint32_t row_num);
-struct table *new_table(void);
-void free_table(struct table *table);
+struct table *db_open(const char *filename);
+void db_close(struct table *table);
 void print_row(struct row *row);
 
 #endif /* __TABLE_H__ */
