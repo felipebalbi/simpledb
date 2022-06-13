@@ -29,6 +29,7 @@ enum meta_command_result do_meta_command(struct input_buffer *input,
 		struct table *table)
 {
 	if (strncmp(input->buffer, ".exit", input->input_length) == 0) {
+		close_input_buffer(input);
 		db_close(table);
 		exit(EXIT_SUCCESS);
 	}
