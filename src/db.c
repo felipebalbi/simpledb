@@ -28,6 +28,7 @@
 #include "buffer.h"
 #include "compiler.h"
 #include "db.h"
+#include "cursor.h"
 
 static void *get_page(struct pager *pager, uint32_t page_num)
 {
@@ -124,14 +125,21 @@ void deserialize_row(void *src, struct row *dst)
 	memcpy(&dst->email, src + EMAIL_OFFSET, EMAIL_SIZE);
 }
 
-void *row_slot(struct table *table, uint32_t row_num)
+void *cursor_value(struct cursor *cursor)
 {
+	uint32_t row_num = cursor->row_num;
 	uint32_t page_num = row_num / ROWS_PER_PAGE;
-	void *page = get_page(table->pager, page_num);
+	void *page = get_page(cursor->table->pager, page_num);
 	uint32_t row_offset = row_num % ROWS_PER_PAGE;
 	uint32_t byte_offset = row_offset * ROW_SIZE;
 
 	return page + byte_offset;
+}
+
+void cursor_advance(struct cursor *cursor)
+{
+	cursor->row_num += 1;
+	cursor->end = (cursor->row_num >= cursor->table->num_rows);
 }
 
 struct table *db_open(const char *filename)

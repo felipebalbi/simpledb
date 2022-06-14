@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+struct cursor;
+
 #define COLUMN_USERNAME_SIZE	32
 #define COLUMN_EMAIL_SIZE	255
 
@@ -63,7 +65,8 @@ struct table {
 struct pager *pager_open(const char *filename);
 void serialize_row(struct row *src, void *dst);
 void deserialize_row(void *src, struct row *dst);
-void *row_slot(struct table *table, uint32_t row_num);
+void *cursor_value(struct cursor *cursor);
+void cursor_advance(struct cursor *cursor);
 struct table *db_open(const char *filename);
 void db_close(struct table *table);
 void print_row(struct row *row);

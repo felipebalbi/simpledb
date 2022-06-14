@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "compiler.h"
+#include "cursor.h"
 #include "db.h"
 
 enum meta_command_result do_meta_command(struct input_buffer *input,
@@ -88,14 +89,18 @@ enum prepare_result prepare_statement(struct input_buffer *input,
 enum execute_result execute_insert(struct statement *statement,
 		struct table *table)
 {
+	struct cursor *cursor;
 	struct row *row;
 	
 	if (table->num_rows >= TABLE_MAX_ROWS)
 		return EXECUTE_TABLE_FULL;
 
-	row = &statement->row;
-        serialize_row(row, row_slot(table, table->num_rows));
+	cursor = table_end(table);
+        row = &statement->row;
+        serialize_row(row, cursor_value(cursor));
 	table->num_rows++;
+
+	free(cursor);
 
 	return EXECUTE_SUCCESS;
 }
@@ -103,14 +108,20 @@ enum execute_result execute_insert(struct statement *statement,
 enum execute_result execute_select(struct statement *statement,
 		struct table *table)
 {
+	struct cursor *cursor;
 	struct row row;
 
-	for (uint32_t i = 0; i < table->num_rows; i++) {
-		deserialize_row(row_slot(table, i), &row);
+	cursor = table_start(table);
+
+	while (!cursor->end) {
+		deserialize_row(cursor_value(cursor), &row);
 		print_row(&row);
+		cursor_advance(cursor);
 	}
 
-	return EXECUTE_SUCCESS;
+	free(cursor);
+
+        return EXECUTE_SUCCESS;
 }
 
 enum execute_result execute_statement(struct statement *statement,

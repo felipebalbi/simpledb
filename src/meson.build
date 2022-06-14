@@ -1,1 +1,2 @@
-src_files = files('buffer.c',  'compiler.c', 'main.c', 'db.c')
+src_files = files('buffer.c',  'compiler.c', 'main.c', 'db.c',
+                  'cursor.c')
