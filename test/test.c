@@ -32,19 +32,13 @@
 
 #define OUTPUT_MAX 4096
 #define SIMPLEDB "./simpledb"
-#define DB_FILENAME "tmp.db"
 
-void teardown(void)
-{
-	remove(DB_FILENAME);
-}
-
-static pid_t start_child(int rpipes[2], int wpipes[2])
+static pid_t start_child(int rpipes[2], int wpipes[2], char *filename)
 {
 	pid_t child;
 	int ret;
 
-        ret = pipe(rpipes);
+	ret = pipe(rpipes);
 	if (ret != 0) {
 		fprintf(stderr, "Failed to create read pipes\n");
 		exit(EXIT_FAILURE);
@@ -65,7 +59,7 @@ static pid_t start_child(int rpipes[2], int wpipes[2])
 	}
 
         if (child == 0) { /* child */
-		char *exe[] = { SIMPLEDB, DB_FILENAME, NULL };
+		char *exe[] = { SIMPLEDB, filename, NULL };
 
 		close(wpipes[1]);
 		close(rpipes[0]);
@@ -77,6 +71,7 @@ static pid_t start_child(int rpipes[2], int wpipes[2])
 		if (ret == -1) {
 			fprintf(stderr, "Failed to execute. %s\n",
 					strerror(errno));
+			return ret;
 		}
 	}
 
@@ -93,18 +88,13 @@ static void recv_response(int pipe, char *output, size_t len)
 	read(pipe, output, len);
 }
 
-static void stop_child(int pipe)
-{
-	send_cmd(pipe, ".exit");
-}
-
-static void run_script(char **cmds, char *output, size_t len)
+static void run_script(char **cmds, char *output, char *filename, size_t len)
 {
 	int rpipes[2];
 	int wpipes[2];
         pid_t child;
 
-	child = start_child(rpipes, wpipes);
+	child = start_child(rpipes, wpipes, filename);
 
 	if (child > 0) { /* parent */
 		close(wpipes[0]);
@@ -115,102 +105,145 @@ static void run_script(char **cmds, char *output, size_t len)
 			cmds++;
 		}
 
-		stop_child(wpipes[1]);
-		recv_response(rpipes[0], output, len);
+                recv_response(rpipes[0], output, len);
 	}
 }
 
-Test(database, simply_exits, .fini = teardown)
+Test(database, simply_exits)
 {
 	char output[OUTPUT_MAX];
-
 	char *cmds[] = {
 		".exit\n",
 		NULL
 	};
+	char filename[] = "XXXXXX.db";
+	int ret;
+
+	ret = mkstemps(filename, 3);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to create filename");
+		exit(EXIT_FAILURE);
+	}
 
 	memset(output, 0x00, OUTPUT_MAX);
-	run_script(cmds, output, OUTPUT_MAX);
+	run_script(cmds, output, filename, OUTPUT_MAX);
 	cr_assert(eq(str, output, "simpledb > "));
+
+	remove(filename);
 }
 
-Test(database, select_and_exit, .fini = teardown)
+Test(database, select_and_exit)
 {
 	char output[OUTPUT_MAX];
-
 	char *cmds[] = {
-		"select\n"
+		"select\n",
 		".exit\n",
 		NULL
 	};
+	char filename[] = "XXXXXX.db";
+	int ret;
+
+	ret = mkstemps(filename, 3);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to create filename");
+		exit(EXIT_FAILURE);
+	}
 
 	memset(output, 0x00, OUTPUT_MAX);
-	run_script(cmds, output, OUTPUT_MAX);
+	run_script(cmds, output, filename, OUTPUT_MAX);
 	cr_assert(eq(str, output, "simpledb > "
 					"Executed.\n"
 					"simpledb > "));
+
+	remove(filename);
 }
 
-Test(database, handles_unknown_command, .fini = teardown)
+Test(database, handles_unknown_command)
 {
 	char output[OUTPUT_MAX];
-
 	char *cmds[] = {
-		".foo\n"
+		".foo\n",
 		".exit\n",
 		NULL
 	};
+	char filename[] = "XXXXXX.db";
+	int ret;
+
+	ret = mkstemps(filename, 3);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to create filename");
+		exit(EXIT_FAILURE);
+	}
 
 	memset(output, 0x00, OUTPUT_MAX);
-	run_script(cmds, output, OUTPUT_MAX);
+	run_script(cmds, output, filename, OUTPUT_MAX);
 	cr_assert(eq(str, output, "simpledb > "
 					"Unrecognized command '.foo'\n"
 					"simpledb > "));
+
+	remove(filename);
 }
 
-Test(database, inserts_and_retrieves_row, .fini = teardown)
+Test(database, inserts_and_retrieves_row)
 {
 	char output[OUTPUT_MAX];
-
 	char *cmds[] = {
 		"insert 1 user1 person1@example.com\n",
 		"select\n",
 		".exit\n",
 		NULL
 	};
+	char filename[] = "XXXXXX.db";
+	int ret;
+
+	ret = mkstemps(filename, 3);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to create filename");
+		exit(EXIT_FAILURE);
+	}
 
 	memset(output, 0x00, OUTPUT_MAX);
-	run_script(cmds, output, OUTPUT_MAX);
+	run_script(cmds, output, filename, OUTPUT_MAX);
 	cr_assert(eq(str, output, "simpledb > "
 					"Executed.\n"
 					"simpledb > "
 					"(1, user1, person1@example.com)\n"
 					"Executed.\n"
 					"simpledb > "));
+
+	remove(filename);
 }
 
-Test(database, ignores_long_usernames, .fini = teardown)
+Test(database, ignores_long_usernames)
 {
 	char output[OUTPUT_MAX];
-
 	char *cmds[] = {
-		"insert 1 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		"insert 1 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 		" person1@example.com\n",
 		".exit\n",
 		NULL
 	};
+	char filename[] = "XXXXXX.db";
+	int ret;
+
+	ret = mkstemps(filename, 3);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to create filename");
+		exit(EXIT_FAILURE);
+	}
 
 	memset(output, 0x00, OUTPUT_MAX);
-	run_script(cmds, output, OUTPUT_MAX);
+	run_script(cmds, output, filename, OUTPUT_MAX);
 	cr_assert(eq(str, output, "simpledb > "
 					"String is too long.\n"
 					"simpledb > "));
+
+	remove(filename);
 }
 
-Test(database, ignores_long_emails, .fini = teardown)
+Test(database, ignores_long_emails)
 {
 	char output[OUTPUT_MAX];
-
 	char *cmds[] = {
 		"insert 1 user1 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -220,54 +253,83 @@ Test(database, ignores_long_emails, .fini = teardown)
 		".exit\n",
 		NULL
 	};
+	char filename[] = "XXXXXX.db";
+	int ret;
+
+	ret = mkstemps(filename, 3);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to create filename");
+		exit(EXIT_FAILURE);
+	}
 
 	memset(output, 0x00, OUTPUT_MAX);
-	run_script(cmds, output, OUTPUT_MAX);
+	run_script(cmds, output, filename, OUTPUT_MAX);
 	cr_assert(eq(str, output, "simpledb > "
 					"String is too long.\n"
 					"simpledb > "));
+
+	remove(filename);
 }
 
-Test(database, persists_data_to_disk, .fini = teardown)
+Test(database, persists_data_to_disk)
 {
 	char output[OUTPUT_MAX];
-
 	char *cmds1[] = {
 		"insert 1 user1 person1@example.com\n",
 		".exit\n",
 		NULL
 	};
-
 	char *cmds2[] = {
 		"select\n",
 		".exit\n",
 		NULL
 	};
+	char filename[] = "XXXXXX.db";
+	int ret;
+
+	ret = mkstemps(filename, 3);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to create filename");
+		exit(EXIT_FAILURE);
+	}
 
 	memset(output, 0x00, OUTPUT_MAX);
-	run_script(cmds1, output, OUTPUT_MAX);
+	run_script(cmds1, output, filename, OUTPUT_MAX);
 
         cr_assert(eq(str, output, "simpledb > "
 					"Executed.\n"
 					"simpledb > "));
 
         memset(output, 0x00, OUTPUT_MAX);
-	run_script(cmds2, output, OUTPUT_MAX);
+	run_script(cmds2, output, filename, OUTPUT_MAX);
 
         cr_assert(eq(str, output, "simpledb > "
 					"(1, user1, person1@example.com)\n"
 					"Executed.\n"
 					"simpledb > "));
+
+	remove(filename);
 }
 
 #if 0
-Test(database, prints_error_when_table_full, .fini = teardown)
+Test(database, prints_error_when_table_full)
 {
 	int rpipes[2];
 	int wpipes[2];
 	char output[OUTPUT_MAX];
 	char cmd[64];
 	pid_t child;
+	char filename[] = "XXXXXX.db";
+	int ret;
+
+	ret = mkstemps(filename, 3);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to create filename");
+		exit(EXIT_FAILURE);
+	}
+
+	memset(output, 0x00, OUTPUT_MAX);
+	run_script(cmds1, output, filename, OUTPUT_MAX);
 
 	child = start_child(rpipes, wpipes);
 	close(wpipes[0]);
@@ -281,7 +343,9 @@ Test(database, prints_error_when_table_full, .fini = teardown)
 	}
 		
 	stop_child(wpipes[1]);
-	recv_response(rpipes[0], output, OUTPUT_MAX);
+	recv_response(rpipes[0], output, filename, OUTPUT_MAX);
 	cr_assert(eq(str, output, "simpledb > Error: Table full."));
+
+	remove(filename);
 }
 #endif
