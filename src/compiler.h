@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 #include "buffer.h"
-#include "table.h"
+#include "db.h"
 
 enum meta_command_result {
 	META_COMMAND_SUCCESS,

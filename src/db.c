@@ -27,7 +27,7 @@
 
 #include "buffer.h"
 #include "compiler.h"
-#include "table.h"
+#include "db.h"
 
 static void *get_page(struct pager *pager, uint32_t page_num)
 {

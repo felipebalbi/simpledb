@@ -23,7 +23,7 @@
 #include <string.h>
 
 #include "compiler.h"
-#include "table.h"
+#include "db.h"
 
 enum meta_command_result do_meta_command(struct input_buffer *input,
 		struct table *table)

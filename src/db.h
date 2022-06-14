@@ -17,8 +17,8 @@
  * along with simpledb.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TABLE_H__
-#define __TABLE_H__
+#ifndef __DB_H__
+#define __DB_H__
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -68,4 +68,4 @@ struct table *db_open(const char *filename);
 void db_close(struct table *table);
 void print_row(struct row *row);
 
-#endif /* __TABLE_H__ */
+#endif /* __DB_H__ */
