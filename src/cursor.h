@@ -24,11 +24,14 @@
 
 struct cursor {
 	struct table *table;
-	uint32_t row_num;
+	uint32_t page_num;
+	uint32_t cell_num;
 	bool end;
 };
 
 struct cursor *table_start(struct table *table);
 struct cursor *table_end(struct table *table);
+void *cursor_value(struct cursor *cursor);
+void cursor_advance(struct cursor *cursor);
 
 #endif /* __CURSOR_H__ */

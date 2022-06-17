@@ -26,10 +26,13 @@
 #include <unistd.h>
 
 #include "cursor.h"
+#include "db.h"
 
 struct cursor *table_start(struct table *table)
 {
 	struct cursor *cursor;
+	uint32_t num_cells;
+	void *root;
 
 	cursor = malloc(sizeof(*cursor));
 	if (!cursor) {
@@ -38,8 +41,12 @@ struct cursor *table_start(struct table *table)
 	}
 
 	cursor->table = table;
-	cursor->row_num = 0;
-	cursor->end = !table->num_rows;
+	cursor->page_num = table->root_page_num;
+	cursor->cell_num = 0;
+
+	root = get_page(table->pager, table->root_page_num);
+	num_cells = *leaf_node_num_cells(root);
+	cursor->end = !num_cells;
 
 	return cursor;
 }
@@ -47,6 +54,8 @@ struct cursor *table_start(struct table *table)
 struct cursor *table_end(struct table *table)
 {
 	struct cursor *cursor;
+	uint32_t num_cells;
+	void *root;
 
 	cursor = malloc(sizeof(*cursor));
 	if (!cursor) {
@@ -55,8 +64,30 @@ struct cursor *table_end(struct table *table)
 	}
 
 	cursor->table = table;
-	cursor->row_num = table->num_rows;
+	cursor->page_num = table->root_page_num;
+
+	root = get_page(table->pager, table->root_page_num);
+	num_cells = *leaf_node_num_cells(root);
+	cursor->cell_num = num_cells;
 	cursor->end = true;
 
-	return cursor;
+        return cursor;
+}
+
+void *cursor_value(struct cursor *cursor)
+{
+	uint32_t page_num = cursor->page_num;
+	void *page = get_page(cursor->table->pager, page_num);
+
+	return leaf_node_value(page, cursor->cell_num);
+}
+
+void cursor_advance(struct cursor *cursor)
+{
+	uint32_t page_num = cursor->page_num;
+	void *node = get_page(cursor->table->pager, page_num);
+
+        cursor->cell_num += 1;
+        if (cursor->cell_num >= (*leaf_node_num_cells(node)))
+		cursor->end = true;
 }

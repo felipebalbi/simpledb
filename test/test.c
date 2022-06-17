@@ -311,6 +311,75 @@ Test(database, persists_data_to_disk)
 	remove(filename);
 }
 
+Test(database, prints_expected_constants)
+{
+	char output[OUTPUT_MAX];
+	char *cmds[] = {
+		".constants\n",
+		".exit\n",
+		NULL
+	};
+	char filename[] = "XXXXXX.db";
+	int ret;
+
+	ret = mkstemps(filename, 3);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to create filename");
+		exit(EXIT_FAILURE);
+	}
+
+	memset(output, 0x00, OUTPUT_MAX);
+	run_script(cmds, output, filename, OUTPUT_MAX);
+	cr_assert(eq(str, output, "simpledb > "
+					"Constants:\n"
+					"                 ROW_SIZE:   293\n"
+					"  COMMON_NODE_HEADER_SIZE:     6\n"
+					"    LEAF_NODE_HEADER_SIZE:    10\n"
+					"      LEAF_NODE_CELL_SIZE:   297\n"
+					"LEAF_NODE_SPACE_FOR_CELLS:  4086\n"
+					"      LEAF_NODE_MAX_CELLS:    13\n"
+					"simpledb > "));
+
+	remove(filename);
+	
+}
+
+Test(database, prints_expected_tree)
+{
+	char output[OUTPUT_MAX];
+	char *cmds[] = {
+		"insert 3 user3 user3@example.com\n",
+		"insert 2 user2 user2@example.com\n",
+		"insert 1 user1 user1@example.com\n",
+		".btree\n",
+		".exit\n",
+		NULL
+	};
+	char filename[] = "XXXXXX.db";
+	int ret;
+
+	ret = mkstemps(filename, 3);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to create filename");
+		exit(EXIT_FAILURE);
+	}
+
+	memset(output, 0x00, OUTPUT_MAX);
+	run_script(cmds, output, filename, OUTPUT_MAX);
+	cr_assert(eq(str, output, "simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Tree:\n"
+					"leaf (size 3)\n"
+					"    - 0 : 3\n"
+					"    - 1 : 2\n"
+					"    - 2 : 1\n"
+					"simpledb > "));
+
+	remove(filename);
+	
+}
+
 #if 0
 Test(database, prints_error_when_table_full)
 {

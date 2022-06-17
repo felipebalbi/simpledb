@@ -33,6 +33,16 @@ enum meta_command_result do_meta_command(struct input_buffer *input,
 		close_input_buffer(input);
 		db_close(table);
 		exit(EXIT_SUCCESS);
+	} else if (strncmp(input->buffer, ".constants",
+					input->input_length) == 0) {
+		printf("Constants:\n");
+		print_constants();
+		return META_COMMAND_SUCCESS;
+	} else if (strncmp(input->buffer, ".btree",
+					input->input_length) == 0) {
+		printf("Tree:\n");
+		printf_leaf_node(get_page(table->pager, 0));
+		return META_COMMAND_SUCCESS;
 	}
 
         return META_COMMAND_UNRECOGNIZED_COMMAND;
@@ -91,16 +101,17 @@ enum execute_result execute_insert(struct statement *statement,
 {
 	struct cursor *cursor;
 	struct row *row;
-	
-	if (table->num_rows >= TABLE_MAX_ROWS)
+        void *node;
+
+        node = get_page(table->pager, table->root_page_num);
+	if (*leaf_node_num_cells(node) >= LEAF_NODE_MAX_CELLS)
 		return EXECUTE_TABLE_FULL;
 
 	cursor = table_end(table);
         row = &statement->row;
-        serialize_row(row, cursor_value(cursor));
-	table->num_rows++;
+	leaf_node_insert(cursor, row->id, row);
 
-	free(cursor);
+        free(cursor);
 
 	return EXECUTE_SUCCESS;
 }
