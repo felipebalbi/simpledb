@@ -101,16 +101,30 @@ enum execute_result execute_insert(struct statement *statement,
 {
 	struct cursor *cursor;
 	struct row *row;
+
+	uint32_t num_cells;
+        uint32_t key;
+
         void *node;
 
         node = get_page(table->pager, table->root_page_num);
-	if (*leaf_node_num_cells(node) >= LEAF_NODE_MAX_CELLS)
+	num_cells = *leaf_node_num_cells(node);
+
+        if (num_cells >= LEAF_NODE_MAX_CELLS)
 		return EXECUTE_TABLE_FULL;
 
-	cursor = table_end(table);
-        row = &statement->row;
-	leaf_node_insert(cursor, row->id, row);
+	row = &statement->row;
+	key = row->id;
+        cursor = table_find(table, key);
 
+	if (cursor->cell_num < num_cells) {
+		uint32_t cur = *leaf_node_key(node, cursor->cell_num);
+
+		if (cur == key)
+			return EXECUTE_DUPLICATE_KEY;
+	}
+
+	leaf_node_insert(cursor, row->id, row);
         free(cursor);
 
 	return EXECUTE_SUCCESS;

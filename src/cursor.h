@@ -30,7 +30,7 @@ struct cursor {
 };
 
 struct cursor *table_start(struct table *table);
-struct cursor *table_end(struct table *table);
+struct cursor *table_find(struct table *table, uint32_t key);
 void *cursor_value(struct cursor *cursor);
 void cursor_advance(struct cursor *cursor);
 

@@ -51,27 +51,17 @@ struct cursor *table_start(struct table *table)
 	return cursor;
 }
 
-struct cursor *table_end(struct table *table)
+struct cursor *table_find(struct table *table, uint32_t key)
 {
-	struct cursor *cursor;
-	uint32_t num_cells;
-	void *root;
+	uint32_t root_page_num = table->root_page_num;
+	void *root_node = get_page(table->pager, root_page_num);
 
-	cursor = malloc(sizeof(*cursor));
-	if (!cursor) {
-		fprintf(stderr, "Failed to create cursor\n");
+	if (get_node_type(root_node) == NODE_LEAF) {
+		return leaf_node_find(table, root_page_num, key);
+	} else {
+		printf("Need to implement searching an internal node\n");
 		exit(EXIT_FAILURE);
 	}
-
-	cursor->table = table;
-	cursor->page_num = table->root_page_num;
-
-	root = get_page(table->pager, table->root_page_num);
-	num_cells = *leaf_node_num_cells(root);
-	cursor->cell_num = num_cells;
-	cursor->end = true;
-
-        return cursor;
 }
 
 void *cursor_value(struct cursor *cursor)

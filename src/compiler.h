@@ -38,6 +38,7 @@ enum prepare_result {
 
 enum execute_result {
 	EXECUTE_SUCCESS,
+	EXECUTE_DUPLICATE_KEY,
 	EXECUTE_TABLE_FULL,
 	EXECUTE_UNKNOWN,
 };

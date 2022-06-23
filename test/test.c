@@ -371,9 +371,9 @@ Test(database, prints_expected_tree)
 					"simpledb > Executed.\n"
 					"simpledb > Tree:\n"
 					"leaf (size 3)\n"
-					"    - 0 : 3\n"
+					"    - 0 : 1\n"
 					"    - 1 : 2\n"
-					"    - 2 : 1\n"
+					"    - 2 : 3\n"
 					"simpledb > "));
 
 	remove(filename);

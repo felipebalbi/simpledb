@@ -107,6 +107,11 @@ uint32_t *leaf_node_key(void *node, uint32_t cell);
 void *leaf_node_value(void *node, uint32_t cell);
 void initialize_leaf_node(void *node);
 void leaf_node_insert(struct cursor *cursor, uint32_t key, struct row *value);
+struct cursor *leaf_node_find(struct table *table, uint32_t page_num,
+		uint32_t key);
+
+enum node_type get_node_type(void *node);
+void set_node_type(void *node, enum node_type type);
 
 void print_row(struct row *row);
 void print_constants(void);
