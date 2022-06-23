@@ -220,8 +220,8 @@ void leaf_node_insert(struct cursor *cursor, uint32_t key, struct row *value)
 
 	if (cursor->cell_num < num_cells) {
 		for (uint32_t i = num_cells; i > cursor->cell_num; i--) {
-			void *src = leaf_node_cell(node, i - 1);
-			void *dst = leaf_node_cell(node, i);
+			void *src = leaf_node_cell(node, i);
+			void *dst = leaf_node_cell(node, i - 1);
 
                         memcpy(src, dst, LEAF_NODE_CELL_SIZE);
 		}
