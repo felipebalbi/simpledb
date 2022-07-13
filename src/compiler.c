@@ -41,7 +41,7 @@ enum meta_command_result do_meta_command(struct input_buffer *input,
 	} else if (strncmp(input->buffer, ".btree",
 					input->input_length) == 0) {
 		printf("Tree:\n");
-		printf_leaf_node(get_page(table->pager, 0));
+		print_tree(table->pager, 0, 0);
 		return META_COMMAND_SUCCESS;
 	}
 
@@ -109,9 +109,6 @@ enum execute_result execute_insert(struct statement *statement,
 
         node = get_page(table->pager, table->root_page_num);
 	num_cells = *leaf_node_num_cells(node);
-
-        if (num_cells >= LEAF_NODE_MAX_CELLS)
-		return EXECUTE_TABLE_FULL;
 
 	row = &statement->row;
 	key = row->id;

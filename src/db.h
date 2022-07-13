@@ -94,6 +94,27 @@ enum node_type {
 #define LEAF_NODE_SPACE_FOR_CELLS (PAGE_SIZE - LEAF_NODE_HEADER_SIZE)
 #define LEAF_NODE_MAX_CELLS	(LEAF_NODE_SPACE_FOR_CELLS / LEAF_NODE_CELL_SIZE)
 
+/* Internal Node Header Layout */
+#define INTERNAL_NODE_NUM_KEYS_SIZE (sizeof(uint32_t))
+#define INTERNAL_NODE_NUM_KEYS_OFFSET (COMMON_NODE_HEADER_SIZE)
+#define INTERNAL_NODE_RIGHT_CHILD_SIZE (sizeof(uint32_t))
+#define INTERNAL_NODE_RIGHT_CHILD_OFFSET (INTERNAL_NODE_NUM_KEYS_OFFSET + \
+			INTERNAL_NODE_NUM_KEYS_SIZE)
+#define INTERNAL_NODE_HEADER_SIZE (COMMON_NODE_HEADER_SIZE + \
+			INTERNAL_NODE_NUM_KEYS_SIZE + \
+			INTERNAL_NODE_RIGHT_CHILD_SIZE)
+
+/* Internal Node Body Layout */
+#define INTERNAL_NODE_KEY_SIZE	(sizeof(uint32_t))
+#define INTERNAL_NODE_CHILD_SIZE (sizeof(uint32_t))
+#define INTERNAL_NODE_CELL_SIZE	(INTERNAL_NODE_CHILD_SIZE + \
+			INTERNAL_NODE_KEY_SIZE)
+
+#define LEAF_NODE_RIGHT_SPLIT_COUNT ((LEAF_NODE_MAX_CELLS + 1) / 2)
+#define LEAF_NODE_LEFT_SPLIT_COUNT ((LEAF_NODE_MAX_CELLS + 1) - \
+			LEAF_NODE_RIGHT_SPLIT_COUNT)
+
+uint32_t get_unused_page_num(struct pager *pager);
 void *get_page(struct pager *pager, uint32_t page_num);
 struct pager *pager_open(const char *filename);
 void serialize_row(struct row *src, void *dst);
@@ -101,11 +122,18 @@ void deserialize_row(void *src, struct row *dst);
 struct table *db_open(const char *filename);
 void db_close(struct table *table);
 
+bool is_node_root(void *node);
+void set_node_root(void *node, bool is_root);
+void create_new_root(struct table *table, uint32_t right_child_page_num);
+
 uint32_t *leaf_node_num_cells(void *node);
 void *leaf_node_cell(void *node, uint32_t cell);
 uint32_t *leaf_node_key(void *node, uint32_t cell);
 void *leaf_node_value(void *node, uint32_t cell);
 void initialize_leaf_node(void *node);
+void initialize_internal_node(void *node);
+void leaf_node_split_and_insert(struct cursor *cursor, uint32_t key,
+		struct row *value);
 void leaf_node_insert(struct cursor *cursor, uint32_t key, struct row *value);
 struct cursor *leaf_node_find(struct table *table, uint32_t page_num,
 		uint32_t key);
@@ -115,6 +143,6 @@ void set_node_type(void *node, enum node_type type);
 
 void print_row(struct row *row);
 void print_constants(void);
-void printf_leaf_node(void *node);
+void print_tree(struct pager *pager, uint32_t page_num, uint32_t level);
 
 #endif /* __DB_H__ */

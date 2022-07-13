@@ -370,10 +370,82 @@ Test(database, prints_expected_tree)
 					"simpledb > Executed.\n"
 					"simpledb > Executed.\n"
 					"simpledb > Tree:\n"
-					"leaf (size 3)\n"
-					"    - 0 : 1\n"
-					"    - 1 : 2\n"
-					"    - 2 : 3\n"
+					" - leaf (size 3)\n"
+					" - 1\n"
+					" - 2\n"
+					" - 3\n"
+					"simpledb > "));
+
+	remove(filename);
+	
+}
+
+Test(database, prints_expected_tree_with_internal_node)
+{
+	char output[OUTPUT_MAX];
+	char *cmds[] = {
+		"insert 14 user3 user3@example.com\n",
+		"insert 13 user3 user3@example.com\n",
+		"insert 12 user3 user3@example.com\n",
+		"insert 11 user3 user3@example.com\n",
+		"insert 10 user3 user3@example.com\n",
+		"insert 9 user3 user3@example.com\n",
+		"insert 8 user3 user3@example.com\n",
+		"insert 7 user3 user3@example.com\n",
+		"insert 6 user3 user3@example.com\n",
+		"insert 5 user3 user3@example.com\n",
+		"insert 4 user3 user3@example.com\n",
+		"insert 3 user3 user3@example.com\n",
+		"insert 2 user2 user2@example.com\n",
+		"insert 1 user1 user1@example.com\n",
+		".btree\n",
+		".exit\n",
+		NULL
+	};
+	char filename[] = "XXXXXX.db";
+	int ret;
+
+	ret = mkstemps(filename, 3);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to create filename");
+		exit(EXIT_FAILURE);
+	}
+
+	memset(output, 0x00, OUTPUT_MAX);
+	run_script(cmds, output, filename, OUTPUT_MAX);
+	cr_assert(eq(str, output, "simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Tree:\n"
+					" - internal (size 1)\n"
+					" - leaf (size 7)\n"
+					"  - 1\n"
+					"  - 2\n"
+					"  - 3\n"
+					"  - 4\n"
+					"  - 5\n"
+					"  - 6\n"
+					"  - 7\n"
+					" - key 7\n"
+					" - leaf (size 7)\n"
+					"  - 8\n"
+					"  - 9\n"
+					"  - 10\n"
+					"  - 11\n"
+					"  - 12\n"
+					"  - 13\n"
+					"  - 14\n"
 					"simpledb > "));
 
 	remove(filename);
