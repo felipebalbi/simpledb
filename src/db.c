@@ -383,6 +383,47 @@ void leaf_node_insert(struct cursor *cursor, uint32_t key, struct row *value)
 	serialize_row(value, leaf_node_value(node, cursor->cell_num));
 }
 
+struct cursor *internal_node_find(struct table *table, uint32_t page_num,
+		uint32_t key)
+{
+	uint32_t child_num;
+	uint32_t max_index;
+	uint32_t min_index;
+	uint32_t num_keys;
+
+	void *child;
+	void *node;
+
+	node = get_page(table->pager, page_num);
+	num_keys = *internal_node_num_keys(node);
+
+	/* Binary search to find index of child to search */
+	min_index = 0;
+	max_index = num_keys; /* there is one more child than key */
+
+	while (min_index != max_index) {
+		uint32_t index = (min_index + max_index) / 2;
+		uint32_t key_to_right = *internal_node_key(node, index);
+
+		if (key_to_right >= key)
+			max_index = index;
+		else
+			min_index = index + 1;
+	}
+
+	child_num = *internal_node_child(node, min_index);
+	child = get_page(table->pager, child_num);
+
+	switch (get_node_type(child)) {
+	case NODE_LEAF:
+		return leaf_node_find(table, child_num, key);
+	case NODE_INTERNAL:
+		return internal_node_find(table, child_num, key);
+	}
+
+	return NULL;
+}
+
 struct cursor *leaf_node_find(struct table *table, uint32_t page_num,
 		uint32_t key)
 {

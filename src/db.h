@@ -137,6 +137,8 @@ void leaf_node_split_and_insert(struct cursor *cursor, uint32_t key,
 void leaf_node_insert(struct cursor *cursor, uint32_t key, struct row *value);
 struct cursor *leaf_node_find(struct table *table, uint32_t page_num,
 		uint32_t key);
+struct cursor *internal_node_find(struct table *table, uint32_t page_num,
+		uint32_t key);
 
 enum node_type get_node_type(void *node);
 void set_node_type(void *node, enum node_type type);
