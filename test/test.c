@@ -334,9 +334,9 @@ Test(database, prints_expected_constants)
 					"Constants:\n"
 					"                 ROW_SIZE:   293\n"
 					"  COMMON_NODE_HEADER_SIZE:     6\n"
-					"    LEAF_NODE_HEADER_SIZE:    10\n"
+					"    LEAF_NODE_HEADER_SIZE:    14\n"
 					"      LEAF_NODE_CELL_SIZE:   297\n"
-					"LEAF_NODE_SPACE_FOR_CELLS:  4086\n"
+					"LEAF_NODE_SPACE_FOR_CELLS:  4082\n"
 					"      LEAF_NODE_MAX_CELLS:    13\n"
 					"simpledb > "));
 
@@ -384,17 +384,17 @@ Test(database, prints_expected_tree_with_internal_node)
 {
 	char output[OUTPUT_MAX];
 	char *cmds[] = {
-		"insert 14 user3 user3@example.com\n",
-		"insert 13 user3 user3@example.com\n",
-		"insert 12 user3 user3@example.com\n",
-		"insert 11 user3 user3@example.com\n",
-		"insert 10 user3 user3@example.com\n",
-		"insert 9 user3 user3@example.com\n",
-		"insert 8 user3 user3@example.com\n",
-		"insert 7 user3 user3@example.com\n",
-		"insert 6 user3 user3@example.com\n",
-		"insert 5 user3 user3@example.com\n",
-		"insert 4 user3 user3@example.com\n",
+		"insert 14 user14 user14@example.com\n",
+		"insert 13 user13 user13@example.com\n",
+		"insert 12 user12 user12@example.com\n",
+		"insert 11 user11 user11@example.com\n",
+		"insert 10 user10 user10@example.com\n",
+		"insert 9 user9 user9@example.com\n",
+		"insert 8 user8 user8@example.com\n",
+		"insert 7 user7 user7@example.com\n",
+		"insert 6 user6 user6@example.com\n",
+		"insert 5 user5 user5@example.com\n",
+		"insert 4 user4 user4@example.com\n",
 		"insert 3 user3 user3@example.com\n",
 		"insert 2 user2 user2@example.com\n",
 		"insert 1 user1 user1@example.com\n",
@@ -450,6 +450,76 @@ Test(database, prints_expected_tree_with_internal_node)
 
 	remove(filename);
 	
+}
+
+Test(database, traverses_internal_nodes)
+{
+	char output[OUTPUT_MAX];
+	char *cmds[] = {
+		"insert 1 user1 user1@example.com\n",
+		"insert 2 user2 user2@example.com\n",
+		"insert 5 user5 user5@example.com\n",
+		"insert 3 user3 user3@example.com\n",
+		"insert 4 user4 user4@example.com\n",
+		"insert 6 user6 user6@example.com\n",
+		"insert 7 user7 user7@example.com\n",
+		"insert 8 user8 user8@example.com\n",
+		"insert 9 user9 user9@example.com\n",
+		"insert 10 user10 user10@example.com\n",
+		"insert 11 user11 user11@example.com\n",
+		"insert 12 user12 user12@example.com\n",
+		"insert 13 user13 user13@example.com\n",
+		"insert 14 user14 user14@example.com\n",
+		"insert 15 user15 user15@example.com\n",
+		"select\n",
+		".exit\n",
+		NULL
+	};
+	char filename[] = "XXXXXX.db";
+	int ret;
+
+	ret = mkstemps(filename, 3);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to create filename");
+		exit(EXIT_FAILURE);
+	}
+
+	memset(output, 0x00, OUTPUT_MAX);
+	run_script(cmds, output, filename, OUTPUT_MAX);
+	cr_assert(eq(str, output, "simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > (1, user1, user1@example.com)\n"
+					"(2, user2, user2@example.com)\n"
+					"(3, user3, user3@example.com)\n"
+					"(4, user4, user4@example.com)\n"
+					"(5, user5, user5@example.com)\n"
+					"(6, user6, user6@example.com)\n"
+					"(7, user7, user7@example.com)\n"
+					"(8, user8, user8@example.com)\n"
+					"(9, user9, user9@example.com)\n"
+					"(10, user10, user10@example.com)\n"
+					"(11, user11, user11@example.com)\n"
+					"(12, user12, user12@example.com)\n"
+					"(13, user13, user13@example.com)\n"
+					"(14, user14, user14@example.com)\n"
+					"(15, user15, user15@example.com)\n"
+					"Executed.\n"
+					"simpledb > "));
+
+	remove(filename);
 }
 
 #if 0

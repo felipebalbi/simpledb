@@ -32,21 +32,12 @@ struct cursor *table_start(struct table *table)
 {
 	struct cursor *cursor;
 	uint32_t num_cells;
-	void *root;
+	void *node;
 
-	cursor = malloc(sizeof(*cursor));
-	if (!cursor) {
-		fprintf(stderr, "Failed to create cursor\n");
-		exit(EXIT_FAILURE);
-	}
-
-	cursor->table = table;
-	cursor->page_num = table->root_page_num;
-	cursor->cell_num = 0;
-
-	root = get_page(table->pager, table->root_page_num);
-	num_cells = *leaf_node_num_cells(root);
-	cursor->end = !num_cells;
+	cursor = table_find(table, 0);
+	node = get_page(table->pager, cursor->page_num);
+	num_cells = *leaf_node_num_cells(node);
+	cursor->end = (num_cells == 0);
 
 	return cursor;
 }
@@ -77,6 +68,16 @@ void cursor_advance(struct cursor *cursor)
 	void *node = get_page(cursor->table->pager, page_num);
 
         cursor->cell_num += 1;
-        if (cursor->cell_num >= (*leaf_node_num_cells(node)))
-		cursor->end = true;
+        if (cursor->cell_num >= (*leaf_node_num_cells(node))) {
+		/* Advance to next leaf node */
+		uint32_t next_page_num = *leaf_node_next_leaf(node);
+
+		if (next_page_num == 0) {
+			/* This was rightmost leaf */
+			cursor->end = true;
+		} else {
+			cursor->page_num = next_page_num;
+			cursor->cell_num = 0;
+		}
+	}
 }

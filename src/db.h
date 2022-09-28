@@ -80,8 +80,12 @@ enum node_type {
 /* Leaf Node Header Layout */
 #define LEAF_NODE_NUM_CELLS_SIZE (sizeof(uint32_t))
 #define LEAF_NODE_NUM_CELLS_OFFSET (COMMON_NODE_HEADER_SIZE)
-#define LEAF_NODE_HEADER_SIZE	(COMMON_NODE_HEADER_SIZE + \
+#define LEAF_NODE_NEXT_LEAF_SIZE (sizeof(uint32_t))
+#define LEAF_NODE_NEXT_LEAF_OFFSET (LEAF_NODE_NUM_CELLS_OFFSET + \
 			LEAF_NODE_NUM_CELLS_SIZE)
+#define LEAF_NODE_HEADER_SIZE (COMMON_NODE_HEADER_SIZE + \
+			LEAF_NODE_NUM_CELLS_SIZE + \
+			LEAF_NODE_NEXT_LEAF_SIZE)
 
 /* Leaf Node Body Layout */
 #define LEAF_NODE_KEY_SIZE	(sizeof(uint32_t))
@@ -130,6 +134,7 @@ uint32_t *leaf_node_num_cells(void *node);
 void *leaf_node_cell(void *node, uint32_t cell);
 uint32_t *leaf_node_key(void *node, uint32_t cell);
 void *leaf_node_value(void *node, uint32_t cell);
+uint32_t *leaf_node_next_leaf(void *node);
 void initialize_leaf_node(void *node);
 void initialize_internal_node(void *node);
 void leaf_node_split_and_insert(struct cursor *cursor, uint32_t key,
