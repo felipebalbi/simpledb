@@ -113,6 +113,8 @@ enum node_type {
 #define INTERNAL_NODE_CHILD_SIZE (sizeof(uint32_t))
 #define INTERNAL_NODE_CELL_SIZE	(INTERNAL_NODE_CHILD_SIZE + \
 			INTERNAL_NODE_KEY_SIZE)
+/* keep small for testing */
+#define INTERNAL_NODE_MAX_CELLS	3
 
 #define LEAF_NODE_RIGHT_SPLIT_COUNT ((LEAF_NODE_MAX_CELLS + 1) / 2)
 #define LEAF_NODE_LEFT_SPLIT_COUNT ((LEAF_NODE_MAX_CELLS + 1) - \
@@ -142,8 +144,11 @@ void leaf_node_split_and_insert(struct cursor *cursor, uint32_t key,
 void leaf_node_insert(struct cursor *cursor, uint32_t key, struct row *value);
 struct cursor *leaf_node_find(struct table *table, uint32_t page_num,
 		uint32_t key);
+uint32_t internal_node_find_child(void *node, uint32_t key);
 struct cursor *internal_node_find(struct table *table, uint32_t page_num,
 		uint32_t key);
+void internal_node_insert(struct table *table, uint32_t parent_page_num,
+		uint32_t child_page_num);
 
 enum node_type get_node_type(void *node);
 void set_node_type(void *node, enum node_type type);

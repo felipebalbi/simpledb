@@ -522,6 +522,129 @@ Test(database, traverses_internal_nodes)
 	remove(filename);
 }
 
+Test(database, allows_printing_structure_f_leaf_node_btree)
+{
+	char output[OUTPUT_MAX];
+	char *cmds[] = {
+		"insert 1 user1 user1@example.com\n",
+		"insert 2 user2 user2@example.com\n",
+		"insert 5 user5 user5@example.com\n",
+		"insert 3 user3 user3@example.com\n",
+		"insert 4 user4 user4@example.com\n",
+		"insert 6 user6 user6@example.com\n",
+		"insert 7 user7 user7@example.com\n",
+		"insert 8 user8 user8@example.com\n",
+		"insert 9 user9 user9@example.com\n",
+		"insert 10 user10 user10@example.com\n",
+		"insert 11 user11 user11@example.com\n",
+		"insert 12 user12 user12@example.com\n",
+		"insert 13 user13 user13@example.com\n",
+		"insert 14 user14 user14@example.com\n",
+		"insert 15 user15 user15@example.com\n",
+		"insert 16 user16 user16@example.com\n",
+		"insert 17 user17 user17@example.com\n",
+		"insert 18 user18 user18@example.com\n",
+		"insert 19 user19 user19@example.com\n",
+		"insert 20 user20 user20@example.com\n",
+		"insert 21 user21 user21@example.com\n",
+		"insert 22 user22 user22@example.com\n",
+		"insert 23 user23 user23@example.com\n",
+		"insert 24 user24 user24@example.com\n",
+		"insert 25 user25 user25@example.com\n",
+		"insert 26 user26 user26@example.com\n",
+		"insert 27 user27 user27@example.com\n",
+		"insert 28 user28 user28@example.com\n",
+		"insert 29 user29 user29@example.com\n",
+		"insert 30 user30 user30@example.com\n",
+		".btree\n",
+		".exit\n",
+		NULL
+	};
+	char filename[] = "XXXXXX.db";
+	int ret;
+
+	ret = mkstemps(filename, 3);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to create filename");
+		exit(EXIT_FAILURE);
+	}
+
+	memset(output, 0x00, OUTPUT_MAX);
+	run_script(cmds, output, filename, OUTPUT_MAX);
+	cr_assert(eq(str, output, "simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Executed.\n"
+					"simpledb > Tree:\n"
+					" - internal (size 3)\n"
+					" - leaf (size 7)\n"
+					"  - 1\n"
+					"  - 2\n"
+					"  - 3\n"
+					"  - 4\n"
+					"  - 5\n"
+					"  - 6\n"
+					"  - 7\n"
+					" - key 7\n"
+					" - leaf (size 8)\n"
+					"  - 8\n"
+					"  - 9\n"
+					"  - 10\n"
+					"  - 11\n"
+					"  - 12\n"
+					"  - 13\n"
+					"  - 14\n"
+					"  - 15\n"
+					" - key 15\n"
+					" - leaf (size 7)\n"
+					"  - 16\n"
+					"  - 17\n"
+					"  - 18\n"
+					"  - 19\n"
+					"  - 20\n"
+					"  - 21\n"
+					"  - 22\n"
+					" - key 22\n"
+					" - leaf (size 8)\n"
+					"  - 23\n"
+					"  - 24\n"
+					"  - 25\n"
+					"  - 26\n"
+					"  - 27\n"
+					"  - 28\n"
+					"  - 29\n"
+					"  - 30\n"
+					"simpledb > "));
+
+	remove(filename);
+}
+
 #if 0
 Test(database, prints_error_when_table_full)
 {
